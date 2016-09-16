@@ -1,0 +1,25 @@
+int #mostafa, monica#;
+
+int sum, count,pass ,mnt ;
+while (pass != 10) {
+	pass =pass+ 1;}
+
+float x = 1515.141515E151;
+float y = 545154.15415;
+
+boolean flag;
+
+if (x == 5) {
+	x = (x - 1);
+	x = x * 2;
+} else {
+	x = x / 3;
+}
+
+if (x >= 2) {
+	x = 1;
+}
+
+if (x <= 1) {
+	x = 2;
+}

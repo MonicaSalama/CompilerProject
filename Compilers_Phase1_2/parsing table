@@ -1,0 +1,35 @@
+$  id  ;  int  float  if  (  )  {  }  else  while  assign  relop  addop  mulop  num  +  -  
+
+METHOD_BODY :: -3  STATEMENT_LIST   -1  STATEMENT_LIST   STATEMENT_LIST   STATEMENT_LIST   -1  -1  -1  -1  -1  STATEMENT_LIST   -1  -1  -1  -1  -1  -1  -1  
+
+STATEMENT_LIST :: -3  STATEMENT STATEMENT_LIST\   -1  STATEMENT STATEMENT_LIST\   STATEMENT STATEMENT_LIST\   STATEMENT STATEMENT_LIST\   -1  -1  -1  -1  -1  STATEMENT STATEMENT_LIST\   -1  -1  -1  -1  -1  -1  -1  
+
+STATEMENT_LIST\ :: -2  STATEMENT STATEMENT_LIST\   -1  STATEMENT STATEMENT_LIST\   STATEMENT STATEMENT_LIST\   STATEMENT STATEMENT_LIST\   -1  -1  -1  -1  -1  STATEMENT STATEMENT_LIST\   -1  -1  -1  -1  -1  -1  -1  
+
+STATEMENT :: -3  ASSIGNMENT   -1  DECLARATION   DECLARATION   IF   -1  -1  -1  -3  -1  WHILE   -1  -1  -1  -1  -1  -1  -1  
+
+DECLARATION :: -3  -3  -1  PRIMITIVE_TYPE id ;   PRIMITIVE_TYPE id ;   -3  -1  -1  -1  -3  -1  -3  -1  -1  -1  -1  -1  -1  -1  
+
+PRIMITIVE_TYPE :: -1  -3  -1  int   float   -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  -1  
+
+IF :: -3  -3  -1  -3  -3  if ( EXPRESSION ) { STATEMENT } else { STATEMENT }   -1  -1  -1  -3  -1  -3  -1  -1  -1  -1  -1  -1  -1  
+
+WHILE :: -3  -3  -1  -3  -3  -3  -1  -1  -1  -3  -1  while ( EXPRESSION ) { STATEMENT }   -1  -1  -1  -1  -1  -1  -1  
+
+ASSIGNMENT :: -3  id assign EXPRESSION ;   -1  -3  -3  -3  -1  -1  -1  -3  -1  -3  -1  -1  -1  -1  -1  -1  -1  
+
+EXPRESSION :: -1  SIMPLE_EXPRESSION EXPRESSION\   -3  -1  -1  -1  SIMPLE_EXPRESSION EXPRESSION\   -3  -1  -1  -1  -1  -1  -1  -1  -1  SIMPLE_EXPRESSION EXPRESSION\   SIMPLE_EXPRESSION EXPRESSION\   SIMPLE_EXPRESSION EXPRESSION\   
+
+EXPRESSION\ :: -2  -1  -2  -1  -1  -1  -1  -2  -1  -1  -1  -1  -1  relop SIMPLE_EXPRESSION   -1  -1  -1  -1  -1  
+
+SIMPLE_EXPRESSION :: -1  TERM SIMPLE_EXPRESSION\   -3  -1  -1  -1  TERM SIMPLE_EXPRESSION\   -3  -1  -1  -1  -1  -1  -3  -1  -1  TERM SIMPLE_EXPRESSION\   SIGN TERM SIMPLE_EXPRESSION\   SIGN TERM SIMPLE_EXPRESSION\   
+
+SIMPLE_EXPRESSION\ :: -2  -1  -2  -1  -1  -1  -1  -2  -1  -1  -1  -1  -1  -2  addop TERM SIMPLE_EXPRESSION\   -1  -1  -1  -1  
+
+TERM :: -1  FACTOR TERM\   -3  -1  -1  -1  FACTOR TERM\   -3  -1  -1  -1  -1  -1  -3  -3  -1  FACTOR TERM\   -1  -1  
+
+TERM\ :: -2  -1  -2  -1  -1  -1  -1  -2  -1  -1  -1  -1  -1  -2  -2  mulop FACTOR TERM\   -1  -1  -1  
+
+FACTOR :: -1  id   -3  -1  -1  -1  ( EXPRESSION )   -3  -1  -1  -1  -1  -1  -3  -3  -3  num   -1  -1  
+
+SIGN :: -1  -3  -1  -1  -1  -1  -3  -1  -1  -1  -1  -1  -1  -1  -1  -1  -3  +   -   

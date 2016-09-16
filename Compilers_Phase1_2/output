@@ -1,0 +1,193 @@
+METHOD_BODY      
+
+STATEMENT_LIST      
+
+STATEMENT   STATEMENT_LIST\      
+
+DECLARATION   STATEMENT_LIST\      
+
+PRIMITIVE_TYPE   id   ;   STATEMENT_LIST\      
+
+int   id   ;   STATEMENT_LIST\      
+
+MATCHED int
+id   ;   STATEMENT_LIST\      
+
+MATCHED id
+;   STATEMENT_LIST\      
+
+MATCHED ;
+STATEMENT_LIST\      
+
+STATEMENT   STATEMENT_LIST\      
+
+ASSIGNMENT   STATEMENT_LIST\      
+
+id   assign   EXPRESSION   ;   STATEMENT_LIST\      
+
+MATCHED id
+assign   EXPRESSION   ;   STATEMENT_LIST\      
+
+MATCHED assign
+EXPRESSION   ;   STATEMENT_LIST\      
+
+SIMPLE_EXPRESSION   EXPRESSION\   ;   STATEMENT_LIST\      
+
+TERM   SIMPLE_EXPRESSION\   EXPRESSION\   ;   STATEMENT_LIST\      
+
+FACTOR   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   STATEMENT_LIST\      
+
+num   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   STATEMENT_LIST\      
+
+MATCHED num
+TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   STATEMENT_LIST\      
+
+MATCHED $
+SIMPLE_EXPRESSION\   EXPRESSION\   ;   STATEMENT_LIST\      
+
+MATCHED $
+EXPRESSION\   ;   STATEMENT_LIST\      
+
+MATCHED $
+;   STATEMENT_LIST\      
+
+MATCHED ;
+STATEMENT_LIST\      
+
+STATEMENT   STATEMENT_LIST\      
+
+IF   STATEMENT_LIST\      
+
+if   (   EXPRESSION   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED if
+(   EXPRESSION   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED (
+EXPRESSION   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+SIMPLE_EXPRESSION   EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+TERM   SIMPLE_EXPRESSION\   EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+FACTOR   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+id   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED id
+TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+SIMPLE_EXPRESSION\   EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+relop   SIMPLE_EXPRESSION   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED relop
+SIMPLE_EXPRESSION   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+TERM   SIMPLE_EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+FACTOR   TERM\   SIMPLE_EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+num   TERM\   SIMPLE_EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED num
+TERM\   SIMPLE_EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+SIMPLE_EXPRESSION\   )   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+)   {   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED )
+{   STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED {
+STATEMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+ASSIGNMENT   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+id   assign   EXPRESSION   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED id
+assign   EXPRESSION   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED assign
+EXPRESSION   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+SIMPLE_EXPRESSION   EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+TERM   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+FACTOR   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+num   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED num
+TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+EXPRESSION\   ;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED $
+;   }   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED ;
+}   else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED }
+else   {   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED else
+{   STATEMENT   }   STATEMENT_LIST\      
+
+MATCHED {
+STATEMENT   }   STATEMENT_LIST\      
+
+ASSIGNMENT   }   STATEMENT_LIST\      
+
+id   assign   EXPRESSION   ;   }   STATEMENT_LIST\      
+
+MATCHED id
+assign   EXPRESSION   ;   }   STATEMENT_LIST\      
+
+MATCHED assign
+EXPRESSION   ;   }   STATEMENT_LIST\      
+
+error, skip addop
+EXPRESSION   ;   }   STATEMENT_LIST\      
+
+SIMPLE_EXPRESSION   EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+TERM   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+FACTOR   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+num   TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+MATCHED num
+TERM\   SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+MATCHED $
+SIMPLE_EXPRESSION\   EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+MATCHED $
+EXPRESSION\   ;   }   STATEMENT_LIST\      
+
+MATCHED $
+;   }   STATEMENT_LIST\      
+
+MATCHED ;
+}   STATEMENT_LIST\      
+
+MATCHED }
+STATEMENT_LIST\      
+
+MATCHED $
