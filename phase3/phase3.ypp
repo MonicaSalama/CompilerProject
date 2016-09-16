@@ -1,0 +1,511 @@
+/********************************************************
+ * phase3.ypp 
+ ********************************************************/
+%{
+#include <iostream>
+#include <string.h>
+#include <string>
+#include <map>
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+extern "C" FILE *yyin;
+
+map<string, pair<string, int> > myMap;
+map<float, int> fMap;
+int counter = 1;
+int pc = 0, lastCorrectPC = 0;
+
+//-- Lexer prototype required by bison, aka getNextToken()
+string itos(int i);
+string ftos(float f);
+void printVector(vector<string>* v);
+string iRelopCode(string* s);
+pair<string, string> fRelopCode(string* s);
+int yylex(); 
+int yyerror(const char *p) { cerr << "Error!" << endl; }
+%}
+
+%code requires {
+	#include <string>
+	#include <algorithm>
+	#include <cstring>
+	#include <vector>
+	using namespace std;
+}
+
+//-- SYMBOL SEMANTIC VALUES -----------------------------
+%union {
+	struct {
+		int ival;
+		float fval;
+		int address;
+		int start;
+		string* val;
+		string* type;
+		vector<string> *code;
+	} node;
+
+};
+%token <node> INT FLOAT IF ELSE WHILE ID NUM RELOP ASSIGN SEMICOLON COMMA OP CL OPC CLC PLUS MINUS MULT DIV
+%type  <node> method_body statement_list statement declaration primitive_type if else while assignment expression simple_expression term factor sign
+
+//-- GRAMMAR RULES ---------------------------------------
+%%
+method_body:
+	statement_list {
+		cout << pc++ << " return" << endl;
+	}
+	;
+statement_list:
+	statement {
+		$$.type = $1.type;
+		if (($1.type)->compare("ERROR") != 0) {
+			printVector($1.code);
+			lastCorrectPC = pc;
+		} else {
+			cout << "THIS IS AN ERROR" << endl;
+			pc = lastCorrectPC;
+		}
+	}
+	| statement_list statement {
+		$$.type = $1.type;
+		if (($2.type)->compare("ERROR") != 0) {
+			printVector($2.code);
+			lastCorrectPC = pc;
+		} else {
+			cout << "THIS IS AN ERROR" << endl;
+			pc = lastCorrectPC;
+		}
+	}
+	;
+statement:
+	declaration {
+		$$.type = $1.type;
+		($$.code) = new vector<string>();
+	}
+	| if {
+		$$.type = $1.type;
+		if (($1.type)->compare("ERROR") != 0) {
+			$$.start = $1.start;
+			$$.code = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+		}
+	}
+	| while {
+		$$.type = $1.type;
+		if (($1.type)->compare("ERROR") != 0) {
+			$$.start = $1.start;
+			$$.code = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+		}
+	}
+	| assignment {
+		$$.type = $1.type;
+		if (($1.type)->compare("ERROR") != 0) {
+			$$.start = $1.start;
+			$$.code = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+		}
+	}
+	;
+declaration:
+	primitive_type ID SEMICOLON {
+		myMap[*($2.val)] = make_pair(*($1.type), counter++);
+	}
+	;
+primitive_type:
+	INT {
+		$$.type = new string("INT");
+	}
+	| FLOAT {
+		$$.type = new string("FLOAT");
+	}
+	;
+if:
+	IF OP expression CL OPC statement CLC else OPC statement CLC {
+		if (($3.type)->compare("BOOL") != 0 || ($6.type)->compare("ERROR") == 0
+			|| ($10.type)->compare("ERROR") == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.type = $3.type;
+			$$.code = new vector<string>();
+			$$.start = $3.start;
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end() - 1);
+			($$.code)->push_back((*($3.code))[(int) (($3.code)->size() - 1)] + itos($10.start));
+			($$.code)->insert(($$.code)->end(), ($6.code)->begin(), ($6.code)->end());
+			($$.code)->push_back((*($8.code))[0] + itos(pc));
+			($$.code)->insert(($$.code)->end(), ($10.code)->begin(), ($10.code)->end());
+		}
+	}
+	;
+while:
+	WHILE OP expression CL OPC statement CLC {
+		if (($3.type)->compare("BOOL") != 0 || ($6.type)->compare("ERROR") == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.type = $3.type;
+			$$.code = new vector<string>();
+			$$.start = $3.start;
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end() - 1);
+			($$.code)->push_back((*($3.code))[(int) (($3.code)->size() - 1)] + itos(pc + 1));
+			($$.code)->insert(($$.code)->end(), ($6.code)->begin(), ($6.code)->end());
+			($$.code)->push_back(itos(pc++) + " goto "+ itos($$.start));
+		}
+	}
+	;
+assignment:
+	ID ASSIGN expression SEMICOLON {
+		if (myMap.find(*($1.val)) == myMap.end() || ($3.type)->compare("ERROR") == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.start = $3.start;
+			($$.code) = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end());
+			pair<string, int> iid = myMap[*($1.val)];
+			if (($3.type)->compare("INT") == 0) {
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+				if ((iid.first).compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " i2f");
+					($$.code)->push_back(itos(pc++) + " fstore_" + itos(iid.second));
+				} else if ((iid.first).compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " istore_" + itos(iid.second));
+				}
+			} else if (($3.type)->compare("FLOAT") == 0) {
+				($$.code)->push_back(itos(pc++) + " fload_" + itos($3.address));
+				if ((iid.first).compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " f2i");
+					($$.code)->push_back(itos(pc++) + " istore_" + itos(iid.second));
+				} else if ((iid.first).compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fstore_" + itos(iid.second));
+				}
+			}
+			$$.type = $3.type;
+		}
+	}
+	;
+else:
+	ELSE {
+		$$.code = new vector<string>();
+		$$.start = pc;
+		($$.code)->push_back(itos(pc++) + " goto ");
+	}
+expression:
+	simple_expression {
+		if (($1.type)->compare("ERROR") != 0) {
+			$$.start = $1.start;
+			($$.code) = new vector<string>();
+			$$.address = $1.address;
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+		}
+		$$.type = $1.type;
+	}
+	| simple_expression RELOP simple_expression {
+		if (($1.type)->compare("ERROR")  == 0 || ($3.type)->compare("ERROR")  == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.start = pc;
+			$$.code = new vector<string>();
+			$$.type = new string("BOOL");
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end());
+			if (($1.type)->compare("INT") == 0 && ($3.type)->compare("INT") == 0) {
+				($$.code)->push_back(itos(pc++) + " " + "iload_" + itos($1.address));
+				($$.code)->push_back(itos(pc++) + " " + "iload_" + itos($3.address));
+				($$.code)->push_back(itos(pc++) + " " + iRelopCode($2.val));
+			} else {
+				if (($1.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " " + "iload_" + itos($1.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($1.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " " + "fload_" + itos($1.address));
+				}
+				if (($3.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " " + "iload_" + itos($3.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($3.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " " + "fload_" + itos($3.address));
+				}
+				pair<string, string> relopCode = fRelopCode($2.val);
+				($$.code)->push_back(itos(pc++) + " " + relopCode.first);
+				($$.code)->push_back(itos(pc++) + " " + relopCode.second);
+			}
+		}
+	}
+	;
+simple_expression:
+	term {
+		if(($1.type)->compare("ERROR") != 0) {
+			$$.start = $1.start;
+			($$.code) = new vector<string>();
+			$$.address = $1.address;
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+		}
+		$$.type = $1.type;
+	}
+	| sign term {
+		if (($2.type)->compare("ERROR") == 0) {
+			$$.type = $1.type;
+		} else {
+			$$.start = pc;
+			($$.code) = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($2.code)->begin(), ($2.code)->end());
+			$$.type = $2.type;
+			if (($1.type)->compare("PLUS") == 0) {
+				$$.address = $2.address;
+			} else if (($1.type)->compare("MINUS") == 0) {
+				if (($2.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " ineg");
+					($$.code)->push_back(itos(pc++) + " istore " + itos(counter));
+				} else if (($2.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fneg");
+					($$.code)->push_back(itos(pc++) + " fstore " + itos(counter));
+				}
+				$$.address = counter++;
+			}
+		}
+	}
+	| simple_expression sign term {
+		if (($1.type)->compare("ERROR") == 0 || ($3.type)->compare("ERROR") == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.start = pc;
+			($$.code) = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end());
+			if (($1.type)->compare("INT") == 0 && ($3.type)->compare("INT") == 0) {
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($1.address));
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+				if (($2.type)->compare("PLUS") == 0) {
+					($$.code)->push_back(itos(pc++) + " iadd");
+				} else if (($2.type)->compare("MINUS") == 0) {
+					($$.code)->push_back(itos(pc++) + " isub");
+				}
+				($$.code)->push_back(itos(pc++) + " istore_" + itos(counter));
+				$$.type = new string("INT");
+			} else {
+				if (($1.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " iload_" + itos($1.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($1.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fload_" + itos($1.address));
+				}
+				if (($3.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($3.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fload_" + itos($3.address));
+				}
+				if (($2.type)->compare("PLUS") == 0) {
+					($$.code)->push_back(itos(pc++) + " fadd");
+				} else if (($2.type)->compare("MINUS") == 0) {
+					($$.code)->push_back(itos(pc++) + " fsub");
+				}
+				($$.code)->push_back(itos(pc++) + " fstore_" + itos(counter));
+				$$.type = new string("FLOAT");
+			}
+			$$.address = counter++;
+		}
+	}
+	;
+term:
+	factor {
+		if(($1.type)->compare("ERROR") != 0) {
+			$$.start = $1.start;
+			($$.code) = new vector<string>();
+			$$.address = $1.address;
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+		}
+		$$.type = $1.type;
+	}
+	| term MULT factor {
+		if (($1.type)->compare("ERROR") == 0 || ($3.type)->compare("ERROR") == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.start = pc;
+			($$.code) = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end());
+			if (($1.type)->compare("INT") == 0 && ($3.type)->compare("INT") == 0) {
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($1.address));
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+				($$.code)->push_back(itos(pc++) + " imul");
+				($$.code)->push_back(itos(pc++) + " istore_" + itos(counter));
+				$$.type = new string("INT");
+			} else {
+				if (($1.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " iload_" + itos($1.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($1.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fload_" + itos($1.address));
+				}
+				if (($3.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($3.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fload_" + itos($3.address));
+				}
+				($$.code)->push_back(itos(pc++) + " fmul");
+				($$.code)->push_back(itos(pc++) + " fstore_" + itos(counter));
+				$$.type = new string("FLOAT");
+			}
+			$$.address = counter++;
+		}
+	}
+	| term DIV factor {
+		if (($1.type)->compare("ERROR") == 0 || ($3.type)->compare("ERROR") == 0) {
+			$$.type = new string("ERROR");
+		} else {
+			$$.start = pc;
+			($$.code) = new vector<string>();
+			($$.code)->insert(($$.code)->end(), ($1.code)->begin(), ($1.code)->end());
+			($$.code)->insert(($$.code)->end(), ($3.code)->begin(), ($3.code)->end());
+			if (($1.type)->compare("INT") == 0 && ($3.type)->compare("INT") == 0) {
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($1.address));
+				($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+				($$.code)->push_back(itos(pc++) + " idiv");
+				($$.code)->push_back(itos(pc++) + " istore_" + itos(counter));
+				$$.type = new string("INT");
+			} else {
+				if (($1.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " iload_" + itos($1.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($1.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fload_" + itos($1.address));
+				}
+				if (($3.type)->compare("INT") == 0) {
+					($$.code)->push_back(itos(pc++) + " iload_" + itos($3.address));
+					($$.code)->push_back(itos(pc++) + " i2f");
+				} else if (($3.type)->compare("FLOAT") == 0) {
+					($$.code)->push_back(itos(pc++) + " fload_" + itos($3.address));
+				}
+				($$.code)->push_back(itos(pc++) + " fdiv");
+				($$.code)->push_back(itos(pc++) + " fstore_" + itos(counter));
+				$$.type = new string("FLOAT");
+			}
+			$$.address = counter++;
+		}
+	}
+	;
+factor:
+	ID {
+		if (myMap.find(*($1.val)) == myMap.end()) {
+			$$.type = new string("ERROR");
+		} else {
+			($$.code) = new vector<string>();
+			$$.type = new string(myMap[*($1.val)].first);
+			$$.address = myMap[*($1.val)].second;
+		}
+	}
+	| NUM {
+		($$.code) = new vector<string>();
+		if (($1.type)->compare("INT") == 0) {
+			$$.start = pc;
+			($$.code)->push_back(itos(pc) + " bipush " + itos($1.ival));
+			pc += 2;
+			($$.code)->push_back(itos(pc++) + " istore_" + itos(counter));
+			$$.address = counter++;
+		} else if (($1.type)->compare("FLOAT") == 0) {
+			$$.start = pc;
+			if (fMap.find($1.fval) == fMap.end())
+				fMap[$1.fval] = fMap.size() + 1;
+			($$.code)->push_back(itos(pc) + " ldc #" + itos(fMap[$1.fval]) + " // float " + ftos($1.fval));
+			pc += 2;
+			($$.code)->push_back(itos(pc++) + " fstore_" + itos(counter));
+			$$.address = counter++;
+		}
+		$$.type = $1.type;
+	}
+	| OP expression CL {
+		if(($2.type)->compare("ERROR") != 0) {
+			$$.start = $2.start;
+			($$.code) = new vector<string>();
+			$$.address = $2.address;
+			($$.code)->insert(($$.code)->end(), ($2.code)->begin(), ($2.code)->end());
+		}
+		$$.type = $2.type;
+	}
+	;
+sign:
+	PLUS {
+		$$.start = pc;
+		$$.type = new string("PLUS");
+	}
+	| MINUS {
+		$$.start = pc;
+		$$.type = new string("MINUS");
+	}
+	;
+%%
+//-- FUNCTION DEFINITIONS ---------------------------------
+string itos(int i) {
+	stringstream s;
+    s << i;
+    return s.str();
+}
+
+string ftos(float f) {
+	stringstream s;
+    s << f;
+    return s.str();
+}
+
+void printVector(vector<string>* v) {
+	for (int i = 0; i < v->size(); i++)
+		cout << (*v)[i] << endl;
+}
+
+string iRelopCode(string* s) {
+	if(s->compare("<") == 0)
+		return "if_icmpge ";
+	if(s->compare(">") == 0)
+		return "if_icmple ";
+	if(s->compare(">=") == 0)
+		return "if_icmplt ";
+	if(s->compare("<=") == 0)
+		return "if_icmpgt ";		
+	if(s->compare("==") == 0)
+		return "if_acmpne ";
+	if(s->compare("!=") == 0)
+		return "if_acmpeq ";
+	return "";
+}
+
+pair<string, string> fRelopCode(string* s) {
+	if(s->compare("<") == 0)
+		return make_pair("fcmpg", "ifge ");
+	if(s->compare(">") == 0)
+		return make_pair("fcmpl", "ifle ");
+	if(s->compare(">=") == 0)
+		return make_pair("fcmpl", "iflt ");
+	if(s->compare("<=") == 0)
+		return make_pair("fcmpg", "ifgt ");		
+	if(s->compare("==") == 0)
+		return make_pair("fcmpl", "ifne ");
+	if(s->compare("!=") == 0)
+		return make_pair("fcmpl", "ifeq ");
+	return make_pair("", "");
+}
+
+int main(int argc, char** argv)
+{
+	// open a file handle to a particular file:
+	FILE *myfile = fopen(argv[1], "r");
+	// make sure it is valid:
+	if (!myfile) {
+		cout << "Can't open" << argv[1] << "!" << endl;
+		return -1;
+	}
+	// set flex to read from it instead of defaulting to STDIN:
+	yyin = myfile;
+	
+	// parse through the input until there is no more:
+	do {
+		yyparse();
+	} while (!feof(yyin));
+  return 0;
+}
